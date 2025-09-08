@@ -26,8 +26,34 @@ class TextLineCausalDataset(Dataset):
 
         # special tokens
         self.pad_index = self.sp.pad_id()
-        self.sos_index = self.sp.sos_id()
+        self.bos_index = self.sp.bos_id()
         self.eos_index = self.sp.eos_id()
 
     def __len__(self) -> int:
         return len(self.lines)
+
+    def _pad_or_trunc(self, ids: list[int]) -> list[int]:
+        if len(ids) > self.seq_len:
+            return ids[: self.seq_len]
+        elif len(ids) < self.seq_len:
+            return ids + [self.pad_index] * (self.seq_len - len(ids))
+        return ids
+
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
+        text = self.lines[idx]
+        ids = self.sp.sample_encode_as_ids(text, nbest_size=-1, alpha=self.alpha)
+        ids = [self.bos_index] + ids + [self.eos_index]
+
+        # Build input_ids (length seq_len)
+        input_ids = self._pad_or_trunc(ids)
+
+        return {"input_ids": input_ids}
+
+
+if __name__ == "__main__":
+    dataset = TextLineCausalDataset(
+        text_path="dataset/dataset.txt",
+        sp_model="tokenizer/unigram_2000.model",
+        seq_len=32,
+    )
+    print(dataset[128])
