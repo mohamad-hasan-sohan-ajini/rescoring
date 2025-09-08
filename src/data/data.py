@@ -28,3 +28,6 @@ class TextLineCausalDataset(Dataset):
         self.pad_index = self.sp.pad_id()
         self.sos_index = self.sp.sos_id()
         self.eos_index = self.sp.eos_id()
+
+    def __len__(self) -> int:
+        return len(self.lines)
