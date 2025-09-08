@@ -44,10 +44,13 @@ class TextLineCausalDataset(Dataset):
         ids = self.sp.sample_encode_as_ids(text, nbest_size=-1, alpha=self.alpha)
         ids = [self.bos_index] + ids + [self.eos_index]
 
-        # Build input_ids (length seq_len)
         input_ids = self._pad_or_trunc(ids)
+        labels = input_ids[1:] + [self.pad_index]
 
-        return {"input_ids": input_ids}
+        return {
+            "input_ids": input_ids,
+            "labels": labels,
+        }
 
 
 if __name__ == "__main__":
