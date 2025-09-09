@@ -64,6 +64,7 @@ if __name__ == "__main__":
     dataset = TextLineCausalDataset(
         text_path="dataset/dataset.txt",
         sp_model="tokenizer/unigram_2000.model",
-        seq_len=32,
+        seq_len=16,
     )
-    print(dataset[128])
+    sample = dataset[128]
+    print(sample)
