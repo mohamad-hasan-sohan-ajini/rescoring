@@ -42,21 +42,22 @@ class TextLineCausalDataset(Dataset):
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         text = self.lines[idx]
         ids = self.sp.sample_encode_as_ids(text, nbest_size=-1, alpha=self.alpha)
-        ids = [self.bos_index] + ids + [self.eos_index]
-
-        input_ids = self._pad_or_trunc(ids)
-        labels = input_ids[1:] + [self.pad_index]
+        input_ids = [self.bos_index] + ids
+        labels = ids + [self.eos_index]
+        length = len(ids) + 1
 
         # causal mask for token prediction
-        pad_index_mask = [1 if tok != self.pad_index else 0 for tok in input_ids]
-        pad_index_mask = torch.tensor(pad_index_mask, dtype=torch.bool)
-        tril = torch.tril(torch.ones((self.seq_len, self.seq_len), dtype=torch.bool))
-        causal_mask = tril & pad_index_mask.unsqueeze(0) & pad_index_mask.unsqueeze(1)
+        # pad_index_mask = [1 if tok != self.pad_index else 0 for tok in input_ids]
+        # pad_index_mask = torch.tensor(pad_index_mask, dtype=torch.bool)
+        # tril = torch.tril(torch.ones((self.seq_len, self.seq_len), dtype=torch.bool))
+        # causal_mask = tril & pad_index_mask.unsqueeze(0) & pad_index_mask.unsqueeze(1)
 
         return {
+            "ids": ids,
             "input_ids": input_ids,
             "labels": labels,
-            "causal_mask": causal_mask,
+            # "causal_mask": causal_mask,
+            "length": length,
         }
 
 
