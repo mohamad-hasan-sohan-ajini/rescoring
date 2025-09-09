@@ -47,7 +47,7 @@ class TextLineCausalDataset(Dataset):
         input_ids = self._pad_or_trunc(ids)
         labels = input_ids[1:] + [self.pad_index]
 
-        # mask
+        # causal mask for token prediction
         pad_index_mask = [1 if tok != self.pad_index else 0 for tok in input_ids]
         pad_index_mask = torch.tensor(pad_index_mask, dtype=torch.bool)
         tril = torch.tril(torch.ones((self.seq_len, self.seq_len), dtype=torch.bool))
