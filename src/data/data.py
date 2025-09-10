@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
 import torch
 import sentencepiece as spm
+from pytorch_lightning import LightningDataModule
 from torch import nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 class TextLineCausalDataset(Dataset):
@@ -61,13 +63,24 @@ class TextLineCausalDataset(Dataset):
         }
 
 
-def collate_function(batch, pad_index: int = 3):
-    batch_size = len(batch)
-    max_len = max([sample["length"] for sample in batch])
+def decorate_collate_function(pad_index, max_len):
+    def decorate(function):
+        def wrap(batch):
+            return function(batch, pad_index=pad_index, max_len=max_len)
 
-    batch_input_ids = torch.LongTensor(batch_size, max_len).fill_(pad_index)
-    batch_labels = torch.LongTensor(batch_size, max_len).fill_(pad_index)
-    batch_mask = torch.BoolTensor(batch_size, max_len, max_len).fill_(True)
+        return wrap
+
+    return decorate
+
+
+@decorate_collate_function(pad_index=3, max_len=64)
+def collate_function(batch, pad_index, max_len):
+    batch_size = len(batch)
+    batch_len = max([sample["length"] for sample in batch])
+
+    batch_input_ids = torch.LongTensor(batch_size, batch_len).fill_(pad_index)
+    batch_labels = torch.LongTensor(batch_size, batch_len).fill_(pad_index)
+    batch_mask = torch.BoolTensor(batch_size, batch_len, batch_len).fill_(True)
 
     for i, sample in enumerate(batch):
         sample_length = sample["length"]
@@ -76,14 +89,18 @@ def collate_function(batch, pad_index: int = 3):
         # labels
         batch_labels[i, :sample_length] = torch.LongTensor(sample["labels"])
         # pad mask
-        pad_mask = torch.BoolTensor(max_len).fill_(True)
+        pad_mask = torch.BoolTensor(batch_len).fill_(True)
         pad_mask[:sample_length].fill_(False)
         # causal mask
-        causal_mask = nn.Transformer.generate_square_subsequent_mask(max_len)
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(batch_len)
         causal_mask = causal_mask.bool()
         # aggregate masks
         mask = causal_mask | pad_mask.unsqueeze(0) | pad_mask.unsqueeze(1)
         batch_mask[i] = mask
+    # trim to max sequence length
+    batch_input_ids = batch_input_ids[:, :max_len]
+    batch_labels = batch_labels[:, :max_len]
+    batch_mask = batch_mask[:, :max_len, :max_len]
     return (batch_input_ids, batch_labels, batch_mask)
 
 
@@ -99,3 +116,6 @@ if __name__ == "__main__":
 
     batch = [dataset[offset + i] for i in range(4)]
     batch_input_ids, batch_labels, batch_mask = collate_function(batch)
+    print(batch_input_ids.shape)
+    print(batch_labels.shape)
+    print(batch_mask.shape)
