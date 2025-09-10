@@ -13,7 +13,7 @@ class PositionalEncoding(LightningModule):
     def __init__(
         self,
         d_model: int,
-        max_len: int = 2000,
+        max_len: int,
     ):
         """Initialize
 
