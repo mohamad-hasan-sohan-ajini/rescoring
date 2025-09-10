@@ -48,17 +48,9 @@ class TextLineCausalDataset(Dataset):
         input_ids = [self.bos_index] + ids
         labels = ids + [self.eos_index]
         length = len(ids) + 1
-
-        # causal mask for token prediction
-        # pad_index_mask = [1 if tok != self.pad_index else 0 for tok in input_ids]
-        # pad_index_mask = torch.tensor(pad_index_mask, dtype=torch.bool)
-        # tril = torch.tril(torch.ones((self.seq_len, self.seq_len), dtype=torch.bool))
-        # causal_mask = tril & pad_index_mask.unsqueeze(0) & pad_index_mask.unsqueeze(1)
-
         return {
             "input_ids": input_ids,
             "labels": labels,
-            # "causal_mask": causal_mask,
             "length": length,
         }
 
@@ -102,6 +94,60 @@ def collate_function(batch, pad_index, max_len):
     batch_labels = batch_labels[:, :max_len]
     batch_mask = batch_mask[:, :max_len, :max_len]
     return (batch_input_ids, batch_labels, batch_mask)
+
+
+class ASRDM(LightningDataModule):
+    def __init__(
+        self,
+        train_dataset_path,
+        validation_dataset_path,
+        sp_model,
+    ):
+        super().__init__()
+        self.train_dataset_path = train_dataset_path
+        self.validation_dataset_path = validation_dataset_path
+        self.sp_model = sp_model
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        tda = TimeDomainAugmentation(
+            base_path=self.tda_base_path,
+            json_path=self.tda_json_path,
+        )
+        fda = FrequencyDomainAugmentation()
+        self.train_dataset = ASRDS(
+            self.train_dataset_path,
+            audio_loader=AudioLoader(),
+            charset_path=self.charset_path,
+            time_domain_augmentor=tda,
+            frequency_domain_augmentor=fda,
+        )
+        self.validation_dataset = ASRDS(
+            self.validation_dataset_path,
+            audio_loader=AudioLoader(),
+            charset_path=self.charset_path,
+            time_domain_augmentor=tda,
+            frequency_domain_augmentor=fda,
+        )
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset,
+            num_workers=self.num_workers,
+            batch_size=self.batch_size,
+            collate_fn=native_ctc_collate_function,
+            pin_memory=True,
+            shuffle=False,
+        )
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.validation_dataset,
+            num_workers=2,
+            batch_size=self.batch_size,
+            collate_fn=native_ctc_collate_function,
+            pin_memory=True,
+            shuffle=False,
+        )
 
 
 if __name__ == "__main__":
