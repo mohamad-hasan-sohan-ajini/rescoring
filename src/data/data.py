@@ -16,12 +16,12 @@ class TextLineCausalDataset(Dataset):
     def __init__(
         self,
         text_path: str,
-        sp_model: str,
+        sp_model_path: str,
         alpha: float = 0.1,
     ):
         super().__init__()
         self.lines = Path(text_path).read_text().splitlines()
-        self.sp = spm.SentencePieceProcessor(model_file=sp_model)
+        self.sp = spm.SentencePieceProcessor(model_file=sp_model_path)
 
         self.alpha = alpha
 
@@ -90,29 +90,27 @@ def collate_function(batch, pad_index, max_len):
 class ASRDM(LightningDataModule):
     def __init__(
         self,
-        train_dataset_path,
-        validation_dataset_path,
-        sp_model,
+        train_dataset_path: str,
+        validation_dataset_path: str,
+        sp_model_path: str,
+        num_workers: int,
+        batch_size: int,
     ):
         super().__init__()
         self.train_dataset_path = train_dataset_path
         self.validation_dataset_path = validation_dataset_path
-        self.sp_model = sp_model
+        self.sp_model_path = sp_model_path
+        self.num_workers = num_workers
+        self.batch_size = batch_size
 
     def setup(self, stage: Optional[str] = None) -> None:
-        self.train_dataset = ASRDS(
+        self.train_dataset = TextLineCausalDataset(
             self.train_dataset_path,
-            audio_loader=AudioLoader(),
-            charset_path=self.charset_path,
-            time_domain_augmentor=tda,
-            frequency_domain_augmentor=fda,
+            self.sp_model_path,
         )
-        self.validation_dataset = ASRDS(
+        self.validation_dataset = TextLineCausalDataset(
             self.validation_dataset_path,
-            audio_loader=AudioLoader(),
-            charset_path=self.charset_path,
-            time_domain_augmentor=tda,
-            frequency_domain_augmentor=fda,
+            self.sp_model_path,
         )
 
     def train_dataloader(self) -> DataLoader:
@@ -120,7 +118,7 @@ class ASRDM(LightningDataModule):
             self.train_dataset,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
-            collate_fn=native_ctc_collate_function,
+            collate_fn=collate_function,
             pin_memory=True,
             shuffle=False,
         )
@@ -128,18 +126,19 @@ class ASRDM(LightningDataModule):
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.validation_dataset,
-            num_workers=2,
+            num_workers=self.num_workers,
             batch_size=self.batch_size,
-            collate_fn=native_ctc_collate_function,
+            collate_fn=collate_function,
             pin_memory=True,
             shuffle=False,
         )
 
 
 if __name__ == "__main__":
+    print("TEST DATASET")
     dataset = TextLineCausalDataset(
         text_path="dataset/dataset.txt",
-        sp_model="tokenizer/unigram_2000.model",
+        sp_model_path="tokenizer/unigram_2000.model",
     )
     offset = 64
     sample = dataset[offset]
@@ -150,3 +149,20 @@ if __name__ == "__main__":
     print(batch_input_ids.shape)
     print(batch_labels.shape)
     print(batch_mask.shape)
+
+    # torchlightning datamodule
+    print("TEST DATAMODULE")
+    datamodule = ASRDM(
+        train_dataset_path="dataset/dataset.txt",
+        validation_dataset_path="dataset/dataset.txt",
+        sp_model_path="tokenizer/unigram_2000.model",
+        num_workers=2,
+        batch_size=4,
+    )
+    datamodule.setup()
+    train_loader = datamodule.train_dataloader()
+    for batch_input_ids, batch_labels, batch_mask in train_loader:
+        print(batch_input_ids.shape)
+        print(batch_labels.shape)
+        print(batch_mask.shape)
+        break
