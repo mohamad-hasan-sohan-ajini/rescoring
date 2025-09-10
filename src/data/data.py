@@ -17,14 +17,12 @@ class TextLineCausalDataset(Dataset):
         self,
         text_path: str,
         sp_model: str,
-        seq_len: int,
         alpha: float = 0.1,
     ):
         super().__init__()
         self.lines = Path(text_path).read_text().splitlines()
         self.sp = spm.SentencePieceProcessor(model_file=sp_model)
 
-        self.seq_len = seq_len
         self.alpha = alpha
 
         # special tokens
@@ -34,13 +32,6 @@ class TextLineCausalDataset(Dataset):
 
     def __len__(self) -> int:
         return len(self.lines)
-
-    def _pad_or_trunc(self, ids: list[int]) -> list[int]:
-        if len(ids) > self.seq_len:
-            return ids[: self.seq_len]
-        elif len(ids) < self.seq_len:
-            return ids + [self.pad_index] * (self.seq_len - len(ids))
-        return ids
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         text = self.lines[idx]
@@ -109,11 +100,6 @@ class ASRDM(LightningDataModule):
         self.sp_model = sp_model
 
     def setup(self, stage: Optional[str] = None) -> None:
-        tda = TimeDomainAugmentation(
-            base_path=self.tda_base_path,
-            json_path=self.tda_json_path,
-        )
-        fda = FrequencyDomainAugmentation()
         self.train_dataset = ASRDS(
             self.train_dataset_path,
             audio_loader=AudioLoader(),
@@ -154,7 +140,6 @@ if __name__ == "__main__":
     dataset = TextLineCausalDataset(
         text_path="dataset/dataset.txt",
         sp_model="tokenizer/unigram_2000.model",
-        seq_len=16,
     )
     offset = 64
     sample = dataset[offset]
