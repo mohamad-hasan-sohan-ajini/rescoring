@@ -28,7 +28,7 @@ class NTPModel(nn.Module):
         )
         self.fc = nn.Linear(d_model, token_size, bias=False)
         # tie weights
-        # self.fc.weight = self.embedding.weight
+        self.fc.weight = self.embedding.weight
 
     def forward(self, x: torch.LongTensor, mask: torch.BoolTensor) -> FloatTensor:
         """Forward
