@@ -8,7 +8,7 @@ from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
 
-class TextLineCausalDataset(Dataset):
+class NTPDataset(Dataset):
     """
     One-sentence-per-line dataset for next-token prediction (causal LM).
     """
@@ -116,11 +116,11 @@ class ASRDM(LightningDataModule):
         self.batch_size = batch_size
 
     def setup(self, stage: Optional[str] = None) -> None:
-        self.train_dataset = TextLineCausalDataset(
+        self.train_dataset = NTPDataset(
             self.train_dataset_path,
             self.sp_model_path,
         )
-        self.validation_dataset = TextLineCausalDataset(
+        self.validation_dataset = NTPDataset(
             self.validation_dataset_path,
             self.sp_model_path,
         )
@@ -148,7 +148,7 @@ class ASRDM(LightningDataModule):
 
 if __name__ == "__main__":
     print("TEST DATASET")
-    dataset = TextLineCausalDataset(
+    dataset = NTPDataset(
         text_path="dataset/dataset.txt",
         sp_model_path="tokenizer/unigram_2000.model",
     )
