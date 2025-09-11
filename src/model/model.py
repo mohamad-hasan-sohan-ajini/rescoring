@@ -3,7 +3,7 @@ from torch import FloatTensor, nn
 from pytorch_lightning import LightningModule
 
 
-class NTPModel(nn.Module):
+class NTPModel(LightningModule):
     def __init__(
         self,
         token_size: int,
@@ -29,12 +29,21 @@ class NTPModel(nn.Module):
         self.fc = nn.Linear(d_model, token_size, bias=False)
         # tie weights
         self.fc.weight = self.embedding.weight
+        # criterion
+        self.criterion = nn.CrossEntropyLoss()
 
-    def forward(self, x: torch.LongTensor, mask: torch.BoolTensor) -> FloatTensor:
+    def forward(
+        self,
+        x: torch.LongTensor,
+        pe: torch.FloatTensor,
+        mask: torch.BoolTensor,
+    ) -> FloatTensor:
         """Forward
 
         :param x: input ids of shape [batch_size, seq_len]
         :type x: torch.LongTensor
+        :param pe: positional encoding of shape [seq_len, d_model]
+        :type pe: torch.FloatTensor
         :param mask: mask of shape [batch_size, seq_len, seq_len]
         :type mask: torch.BoolTensor
         :returns: logits of shape [batch_size, seq_len, token_size]
@@ -42,11 +51,18 @@ class NTPModel(nn.Module):
         """
         # (B, T, d_model)
         x = self.embedding(x)
+        x = x + pe
         for layer in self.transformer_layer:
             x = layer(x, src_mask=mask)
         # (B, T, token_size)
         x = self.fc(x)
         return x
+
+    def training_step(self, batch, batch_idx):
+        input_ids, labels, mask, pe = batch
+        pred = self(input_ids, pe, mask)
+        loss = self.criterion(pred, labels)
+        return {"loss": loss}
 
 
 if __name__ == "__main__":
@@ -60,7 +76,7 @@ if __name__ == "__main__":
     batch_size = 2
     seq_len = 11
     x = torch.randint(0, 2000, (batch_size, seq_len))
-    mask = nn.Transformer.generate_square_subsequent_mask(seq_len).bool()
-    mask = mask.repeat(1, 1)
-    y = model(x, mask)
+    pe = torch.randn(seq_len, 512)
+    mask = torch.randint(0, 2, (batch_size * 8, seq_len, seq_len), dtype=torch.bool)
+    y = model(x, pe, mask)
     print(y.shape)
