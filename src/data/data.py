@@ -7,6 +7,10 @@ from pytorch_lightning import LightningDataModule
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
+from positional_encoder import get_positional_encoding
+
+positional_encoding = get_positional_encoding(d_model=512, max_len=1000)
+
 
 class NTPDataset(Dataset):
     """
@@ -93,10 +97,11 @@ def collate_function(batch, pad_index, max_len, n_heads):
         batch_mask.view(batch_size, 1, batch_len, batch_len)
         .expand(-1, n_heads, -1, -1)
         .clone()
+        .view(batch_size * n_heads, batch_len, batch_len)
     )
-    print("@collate_function")
-    print(batch_mask.shape)
-    return (batch_input_ids, batch_labels, batch_mask)
+    # positional encoding
+    pe = positional_encoding.pe[:batch_len]
+    return (batch_input_ids, batch_labels, batch_mask, pe)
 
 
 class ASRDM(LightningDataModule):
@@ -157,7 +162,7 @@ if __name__ == "__main__":
     print(sample)
 
     batch = [dataset[offset + i] for i in range(4)]
-    batch_input_ids, batch_labels, batch_mask = collate_function(batch)
+    batch_input_ids, batch_labels, batch_mask, pe = collate_function(batch)
     print(batch_input_ids.shape)
     print(batch_labels.shape)
     print(batch_mask.shape)
@@ -173,8 +178,9 @@ if __name__ == "__main__":
     )
     datamodule.setup()
     train_loader = datamodule.train_dataloader()
-    for batch_input_ids, batch_labels, batch_mask in train_loader:
+    for batch_input_ids, batch_labels, batch_mask, pe in train_loader:
         print(batch_input_ids.shape)
         print(batch_labels.shape)
         print(batch_mask.shape)
+        print(pe.shape)
         break
