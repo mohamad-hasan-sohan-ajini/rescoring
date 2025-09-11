@@ -40,10 +40,12 @@ class NTPModel(nn.Module):
         :returns: logits of shape [batch_size, seq_len, token_size]
         :rtype: FloatTensor
         """
-        x = self.embedding(x)  # (B, T, d_model)
+        # (B, T, d_model)
+        x = self.embedding(x)
         for layer in self.transformer_layer:
             x = layer(x, src_mask=mask)
-        x = self.fc(x)  # (B, T, token_size)
+        # (B, T, token_size)
+        x = self.fc(x)
         return x
 
 
@@ -55,8 +57,10 @@ if __name__ == "__main__":
         dim_feedforward=2048,
         num_layers=6,
     )
-    x = torch.randint(0, 2000, (2, 128))
-    mask = nn.Transformer.generate_square_subsequent_mask(128).bool()
-    mask = mask.unsqueeze(0).repeat(2 * 8, 1, 1)  # (B, T, T)
+    batch_size = 2
+    seq_len = 11
+    x = torch.randint(0, 2000, (batch_size, seq_len))
+    mask = nn.Transformer.generate_square_subsequent_mask(seq_len).bool()
+    mask = mask.repeat(1, 1)
     y = model(x, mask)
-    print(y.shape)  # (2, 128, 32000)
+    print(y.shape)
