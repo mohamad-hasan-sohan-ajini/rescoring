@@ -46,18 +46,23 @@ class TextLineCausalDataset(Dataset):
         }
 
 
-def decorate_collate_function(pad_index, max_len):
+def decorate_collate_function(pad_index, max_len, n_heads):
     def decorate(function):
         def wrap(batch):
-            return function(batch, pad_index=pad_index, max_len=max_len)
+            return function(
+                batch,
+                pad_index=pad_index,
+                max_len=max_len,
+                n_heads=n_heads,
+            )
 
         return wrap
 
     return decorate
 
 
-@decorate_collate_function(pad_index=3, max_len=64)
-def collate_function(batch, pad_index, max_len):
+@decorate_collate_function(pad_index=3, max_len=64, n_heads=8)
+def collate_function(batch, pad_index, max_len, n_heads):
     batch_size = len(batch)
     batch_len = max([sample["length"] for sample in batch])
 
@@ -84,6 +89,13 @@ def collate_function(batch, pad_index, max_len):
     batch_input_ids = batch_input_ids[:, :max_len]
     batch_labels = batch_labels[:, :max_len]
     batch_mask = batch_mask[:, :max_len, :max_len]
+    batch_mask = (
+        batch_mask.view(batch_size, 1, batch_len, batch_len)
+        .expand(-1, n_heads, -1, -1)
+        .clone()
+    )
+    print("@collate_function")
+    print(batch_mask.shape)
     return (batch_input_ids, batch_labels, batch_mask)
 
 
