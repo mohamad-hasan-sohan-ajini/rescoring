@@ -104,7 +104,7 @@ def collate_function(batch, pad_index, max_len, n_heads):
     return (batch_input_ids, batch_labels, batch_mask, pe)
 
 
-class ASRDM(LightningDataModule):
+class NTPDM(LightningDataModule):
     def __init__(
         self,
         train_dataset_path: str,
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     # torchlightning datamodule
     print("TEST DATAMODULE")
-    datamodule = ASRDM(
+    datamodule = NTPDM(
         train_dataset_path="dataset/dataset.txt",
         validation_dataset_path="dataset/dataset.txt",
         sp_model_path="tokenizer/unigram_2000.model",
