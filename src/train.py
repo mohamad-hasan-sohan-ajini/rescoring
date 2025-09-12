@@ -7,6 +7,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from data.data import NTPDM
 from model.model import NTPModel
 
+STEPS = 0_000
+
 # create dataset
 datamodule = NTPDM(
     train_dataset_path="/home/aj/baden/lm-data/aggregation_2025-09-06.txt",
@@ -32,7 +34,7 @@ loss_callback = ModelCheckpoint(
     monitor="val_loss",
     mode="min",
     save_last=True,
-    every_n_train_steps=10_000,
+    every_n_train_steps=STEPS,
     dirpath="/data/checkpoints",
     filename="minloss-{epoch}-{step}",
 )
@@ -45,6 +47,6 @@ trainer = Trainer(
     # accumulate_grad_batches=1,
     # precision="32",
     # gradient_clip_val=0.1,
-    val_check_interval=10_000,
+    val_check_interval=STEPS,
 )
 trainer.fit(model, datamodule)
