@@ -32,7 +32,7 @@ loss_callback = ModelCheckpoint(
     monitor="val_loss",
     mode="min",
     save_last=True,
-    every_n_train_steps=1_000,
+    every_n_train_steps=10_000,
     dirpath="/data/checkpoints",
     filename="minloss-{epoch}-{step}",
 )
