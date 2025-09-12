@@ -74,8 +74,8 @@ class NTPModel(LightningModule):
         optimizer = torch.optim.Adam(
             [
                 {"params": self.embedding.parameters(), "lr": 1e-3},
-                {"params": self.decoder.parameters(), "lr": 1e-5},
-                {"params": self.fc.parameters(), "lr": 1e-3},
+                {"params": self.transformer_layers.parameters(), "lr": 1e-5},
+                # {"params": self.fc.parameters(), "lr": 1e-3},  # comment if weights are tied
             ],
         )
         return {"optimizer": optimizer}
