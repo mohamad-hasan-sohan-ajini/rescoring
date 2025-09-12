@@ -102,7 +102,12 @@ def collate_function(batch, pad_index, max_len, n_heads):
     )
     # positional encoding
     pe = positional_encoding.pe[:batch_len]
-    return (batch_input_ids, batch_labels, batch_mask, pe)
+    return (
+        batch_input_ids.contiguous(),
+        batch_labels.contiguous(),
+        batch_mask.contiguous(),
+        pe.contiguous(),
+    )
 
 
 class NTPDM(LightningDataModule):
