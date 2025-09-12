@@ -70,6 +70,16 @@ class NTPModel(LightningModule):
         loss = self.criterion(pred, labels)
         return {"val_loss": loss}
 
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(
+            [
+                {"params": self.embedding.parameters(), "lr": 1e-3},
+                {"params": self.decoder.parameters(), "lr": 1e-5},
+                {"params": self.fc.parameters(), "lr": 1e-3},
+            ],
+        )
+        return {"optimizer": optimizer}
+
 
 if __name__ == "__main__":
     model = NTPModel(
