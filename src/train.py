@@ -6,8 +6,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 from data.data import NTPDM
 from model.model import NTPModel
+from pytorch_lightning.callbacks import Timer, ModelCheckpoint
 
-STEPS = 0_000
+STEPS = 10_000
 
 # create dataset
 datamodule = NTPDM(
@@ -29,6 +30,7 @@ model = NTPModel(
 )
 
 # checkpointing
+timer_callback = Timer(duration="00:01:00:00")
 loss_callback = ModelCheckpoint(
     save_top_k=5,
     monitor="val_loss",
@@ -43,7 +45,7 @@ trainer = Trainer(
     accelerator="gpu",
     devices=[0],
     max_epochs=1000,
-    callbacks=[loss_callback],
+    callbacks=[loss_callback, timer_callback],
     # accumulate_grad_batches=1,
     # precision="32",
     # gradient_clip_val=0.1,
