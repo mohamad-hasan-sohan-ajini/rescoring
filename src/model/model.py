@@ -21,7 +21,7 @@ class NTPModel(LightningModule):
                     d_model=d_model,
                     nhead=n_heads,
                     dim_feedforward=dim_feedforward,
-                    activation="gelu",
+                    # activation="gelu",
                     batch_first=True,
                 )
                 for _ in range(num_layers)
@@ -56,19 +56,21 @@ class NTPModel(LightningModule):
         for layer in self.transformer_layers:
             x = layer(x, src_mask=mask)
         # (B, T, token_size)
-        x = self.fc(x).log_softmax(dim=2)
+        x = self.fc(x).log_softmax(2)
         return x
 
     def training_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
         pred = self(input_ids, pe, mask).view(-1, self.token_size)
         loss = self.criterion(pred, labels.view(-1))
+        self.log("train_loss", loss.item())
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
         pred = self(input_ids, pe, mask).view(-1, self.token_size)
         loss = self.criterion(pred, labels.view(-1))
+        self.log("val_loss", loss.item())
         return {"val_loss": loss}
 
     def configure_optimizers(self):
