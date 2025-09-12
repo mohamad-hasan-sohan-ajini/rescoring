@@ -13,6 +13,7 @@ class NTPModel(LightningModule):
         num_layers: int,
     ):
         super().__init__()
+        self.token_size = token_size
         self.embedding = nn.Embedding(token_size, d_model)
         self.transformer_layers = nn.ModuleList(
             [
@@ -60,14 +61,14 @@ class NTPModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
-        pred = self(input_ids, pe, mask)
-        loss = self.criterion(pred, labels)
+        pred = self(input_ids, pe, mask).view(-1, self.token_size)
+        loss = self.criterion(pred, labels.view(-1))
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
-        pred = self(input_ids, pe, mask)
-        loss = self.criterion(pred, labels)
+        pred = self(input_ids, pe, mask).view(-1, self.token_size)
+        loss = self.criterion(pred, labels.view(-1))
         return {"val_loss": loss}
 
     def configure_optimizers(self):
