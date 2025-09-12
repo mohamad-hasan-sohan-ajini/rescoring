@@ -64,6 +64,12 @@ class NTPModel(LightningModule):
         loss = self.criterion(pred, labels)
         return {"loss": loss}
 
+    def validation_step(self, batch, batch_idx):
+        input_ids, labels, mask, pe = batch
+        pred = self(input_ids, pe, mask)
+        loss = self.criterion(pred, labels)
+        return {"val_loss": loss}
+
 
 if __name__ == "__main__":
     model = NTPModel(
