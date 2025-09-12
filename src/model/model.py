@@ -14,7 +14,7 @@ class NTPModel(LightningModule):
     ):
         super().__init__()
         self.embedding = nn.Embedding(token_size, d_model)
-        self.transformer_layer = nn.ModuleList(
+        self.transformer_layers = nn.ModuleList(
             [
                 nn.TransformerEncoderLayer(
                     d_model=d_model,
@@ -29,8 +29,8 @@ class NTPModel(LightningModule):
         self.fc = nn.Linear(d_model, token_size, bias=False)
         # tie weights
         self.fc.weight = self.embedding.weight
-        # criterion
-        self.criterion = nn.CrossEntropyLoss()
+        # criterion (ignore padding index in the loss)
+        self.criterion = nn.NLLLoss(ignore_index=3)
 
     def forward(
         self,
@@ -52,10 +52,10 @@ class NTPModel(LightningModule):
         # (B, T, d_model)
         x = self.embedding(x)
         x = x + pe
-        for layer in self.transformer_layer:
+        for layer in self.transformer_layers:
             x = layer(x, src_mask=mask)
         # (B, T, token_size)
-        x = self.fc(x)
+        x = self.fc(x).log_softmax(dim=2)
         return x
 
     def training_step(self, batch, batch_idx):
