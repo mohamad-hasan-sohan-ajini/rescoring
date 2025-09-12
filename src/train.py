@@ -42,9 +42,9 @@ trainer = Trainer(
     devices=[0],
     max_epochs=1000,
     callbacks=[loss_callback],
-    accumulate_grad_batches=4,
-    precision="16-true",
-    gradient_clip_val=0.1,
+    # accumulate_grad_batches=1,
+    # precision="32",
+    # gradient_clip_val=0.1,
     val_check_interval=10_000,
 )
 trainer.fit(model, datamodule)
