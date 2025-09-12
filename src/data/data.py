@@ -7,7 +7,7 @@ from pytorch_lightning import LightningDataModule
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
-from positional_encoder import get_positional_encoding
+from .positional_encoder import get_positional_encoding
 
 positional_encoding = get_positional_encoding(d_model=512, max_len=1000)
 
@@ -93,6 +93,7 @@ def collate_function(batch, pad_index, max_len, n_heads):
     batch_input_ids = batch_input_ids[:, :max_len]
     batch_labels = batch_labels[:, :max_len]
     batch_mask = batch_mask[:, :max_len, :max_len]
+    batch_len = min(batch_len, max_len)
     batch_mask = (
         batch_mask.view(batch_size, 1, batch_len, batch_len)
         .expand(-1, n_heads, -1, -1)
