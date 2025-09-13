@@ -84,6 +84,7 @@ class NTPModel(LightningModule):
             ],
         )
         # Use scheduler for periodic lr increase/decrease
+        # multiply `step_size[up|down]` by `accumulate_grad_batches` to find number of training steps in each slop!
         scheduler = torch.optim.lr_scheduler.CyclicLR(
             optimizer,
             max_lr=3e-4,
