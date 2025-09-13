@@ -6,8 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 from data.data import NTPDM
 from model.model import NTPModel
-from pytorch_lightning.callbacks import ModelCheckpoint
-from lightning.pytorch.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 STEPS = 10_000
 
