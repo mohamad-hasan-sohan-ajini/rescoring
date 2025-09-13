@@ -61,16 +61,18 @@ class NTPModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
+        batch_size = input_ids.size(0)
         pred = self(input_ids, pe, mask).view(-1, self.token_size)
         loss = self.criterion(pred, labels.view(-1))
-        self.log("train_loss", loss.item())
+        self.log("train_loss", loss.item(), batch_size=batch_size)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         input_ids, labels, mask, pe = batch
+        batch_size = input_ids.size(0)
         pred = self(input_ids, pe, mask).view(-1, self.token_size)
         loss = self.criterion(pred, labels.view(-1))
-        self.log("val_loss", loss.item())
+        self.log("val_loss", loss.item(), batch_size=batch_size)
         return {"val_loss": loss}
 
     def configure_optimizers(self):
