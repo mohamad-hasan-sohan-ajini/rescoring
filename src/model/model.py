@@ -83,7 +83,21 @@ class NTPModel(LightningModule):
                 # {"params": self.fc.parameters(), "lr": 1e-3},  # comment if weights are tied
             ],
         )
-        return {"optimizer": optimizer}
+        # Use scheduler for periodic lr increase/decrease
+        scheduler = torch.optim.lr_scheduler.CyclicLR(
+            optimizer,
+            max_lr=3e-4,
+            base_lr=1e-5,
+            step_size_down=100_000,
+            step_size_up=100_000,
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+            },
+        }
 
 
 if __name__ == "__main__":
