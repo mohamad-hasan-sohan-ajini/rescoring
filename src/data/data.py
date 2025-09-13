@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from .positional_encoder import get_positional_encoding
 
-positional_encoding = get_positional_encoding(d_model=512, max_len=1000)
+positional_encoding = get_positional_encoding(d_model=512, max_len=1200)
 
 
 class NTPDataset(Dataset):
@@ -65,7 +65,7 @@ def decorate_collate_function(pad_index, max_len, n_heads):
     return decorate
 
 
-@decorate_collate_function(pad_index=3, max_len=64, n_heads=8)
+@decorate_collate_function(pad_index=3, max_len=1024, n_heads=8)
 def collate_function(batch, pad_index, max_len, n_heads):
     batch_size = len(batch)
     batch_len = max([sample["length"] for sample in batch])
