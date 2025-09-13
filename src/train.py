@@ -13,7 +13,7 @@ datamodule = NTPDM(
     validation_dataset_path="/home/aj/baden/lm-data/test.txt",
     sp_model_path="/home/aj/repo/rescoring/src/data/tokenizer/unigram_2000.model",
     num_workers=8,
-    batch_size=32,
+    batch_size=8,
 )
 datamodule.setup()
 
@@ -43,7 +43,7 @@ trainer = Trainer(
     devices=[0],
     max_epochs=1000,
     callbacks=[loss_callback, lr_monitor],
-    # accumulate_grad_batches=1,
+    accumulate_grad_batches=4,
     # precision="32",
     # gradient_clip_val=0.1,
     val_check_interval=STEPS,
