@@ -5,7 +5,7 @@ from data.data import NTPDM
 from model.model import NTPModel
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-STEPS = 10_000
+STEPS = 100_000
 
 # create dataset
 datamodule = NTPDM(
