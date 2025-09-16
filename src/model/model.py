@@ -21,7 +21,7 @@ class NTPModel(LightningModule):
                     d_model=d_model,
                     nhead=n_heads,
                     dim_feedforward=dim_feedforward,
-                    # activation="gelu",
+                    activation="gelu",
                     batch_first=True,
                 )
                 for _ in range(num_layers)
