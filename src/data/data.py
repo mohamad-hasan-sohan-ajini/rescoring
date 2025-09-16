@@ -22,12 +22,14 @@ class NTPDataset(Dataset):
         text_path: str,
         sp_model_path: str,
         alpha: float = 0.1,
+        p_augment: float = 0.1,
     ):
         super().__init__()
         self.lines = Path(text_path).read_text().splitlines()
         self.sp = spm.SentencePieceProcessor(model_file=sp_model_path)
 
         self.alpha = alpha
+        self.p_augment = p_augment
 
         # special tokens
         self.pad_index = self.sp.pad_id()
@@ -39,7 +41,10 @@ class NTPDataset(Dataset):
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         text = self.lines[idx]
-        ids = self.sp.sample_encode_as_ids(text, nbest_size=-1, alpha=self.alpha)
+        if torch.rand(1).item() < self.p_augment:
+            ids = self.sp.sample_encode_as_ids(text, nbest_size=-1, alpha=self.alpha)
+        else:
+            ids = self.sp.encode(text)
         input_ids = [self.bos_index] + ids
         labels = ids + [self.eos_index]
         length = len(ids) + 1
