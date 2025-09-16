@@ -33,7 +33,7 @@ loss_callback = ModelCheckpoint(
     mode="min",
     save_last=True,
     every_n_train_steps=STEPS,
-    dirpath="/data/checkpoints",
+    dirpath="checkpoints",
     filename="minloss-{epoch}-{step}",
 )
 lr_monitor = LearningRateMonitor(logging_interval="step")
