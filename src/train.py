@@ -9,7 +9,7 @@ STEPS = 10_000
 
 # create dataset
 datamodule = NTPDM(
-    train_dataset_path="/home/aj/baden/lm-data/aggregation_2025-09-06.txt",
+    train_dataset_path="/home/aj/baden/lm-data/aggregation_2025-09-06_sorted.txt",
     validation_dataset_path="/home/aj/baden/lm-data/test.txt",
     sp_model_path="/home/aj/repo/rescoring/src/data/tokenizer/unigram_2000.model",
     num_workers=8,
