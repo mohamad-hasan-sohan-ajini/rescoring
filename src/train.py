@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -8,10 +10,12 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 STEPS = 100_000
 
 # create dataset
+base_path = Path(__file__).parent
+dataset_path = base_path / "data" / "dataset"
 datamodule = NTPDM(
-    train_dataset_path="/home/aj/baden/lm-data/aggregation_2025-09-06_sorted.txt",
-    validation_dataset_path="/home/aj/baden/lm-data/test.txt",
-    sp_model_path="/home/aj/repo/rescoring/src/data/tokenizer/unigram_2000.model",
+    train_dataset_path=dataset_path / "train.txt",
+    validation_dataset_path=dataset_path / "validation.txt",
+    sp_model_path=str(base_path / "data" / "tokenizer" / "unigram_2000.model"),
     num_workers=8,
     batch_size=8,
 )
