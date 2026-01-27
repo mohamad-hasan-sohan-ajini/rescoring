@@ -8,8 +8,6 @@ class NTPModel(LightningModule):
         self,
         token_size: int,
         d_model: int,
-        n_heads: int,
-        dim_feedforward: int,
         num_layers: int,
     ):
         super().__init__()
@@ -19,8 +17,8 @@ class NTPModel(LightningModule):
             [
                 nn.TransformerEncoderLayer(
                     d_model=d_model,
-                    nhead=n_heads,
-                    dim_feedforward=dim_feedforward,
+                    nhead=d_model // 64,
+                    dim_feedforward=4 * d_model,
                     activation="gelu",
                     batch_first=True,
                 )

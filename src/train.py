@@ -25,8 +25,6 @@ datamodule.setup()
 model = NTPModel(
     token_size=2000,
     d_model=512,
-    n_heads=8,
-    dim_feedforward=2048,
     num_layers=6,
 )
 
@@ -48,7 +46,7 @@ trainer = Trainer(
     max_epochs=1000,
     callbacks=[loss_callback, lr_monitor],
     accumulate_grad_batches=4,
-    # precision="32",
+    precision="16-mixed",
     # gradient_clip_val=0.1,
     val_check_interval=STEPS,
 )
